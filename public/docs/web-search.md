@@ -4,7 +4,7 @@ Trigger a background search engine query via Tavily, returning structured search
 
 ### Endpoint Contract
 ```http
-POST /chat/search
+POST /workflow-nodes/web-search
 Authorization: Bearer af_live_your_integration_key_here
 Content-Type: application/json
 ```

@@ -19,8 +19,8 @@ Content-Type: application/json
 - **Workspace Scope**: Each key is permanently bound to your workspace. Requests made with an Integration Key inherit workspace permissions automatically.
 - **Header Example**:
   ```http
-  POST /api/backend/chat/stream HTTP/1.1
-  Host: localhost:3000
+  POST /chat/stream HTTP/1.1
+  Host: aetherflow-api.vercel.app
   Authorization: Bearer af_live_42910aef192b
   Content-Type: application/json
   ```

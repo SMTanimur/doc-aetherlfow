@@ -222,12 +222,12 @@ export default function Home() {
           break;
         case 'connections':
           method = 'POST';
-          path = '/workspaces/:workspaceId/connections';
+          path = '/connections/workspace/:workspaceId';
           requestBody = requestText;
           break;
         case 'get-models':
           method = 'GET';
-          path = '/models';
+          path = '/ai-models/unified';
           break;
         case 'get-providers':
           method = 'GET';
@@ -251,12 +251,12 @@ export default function Home() {
           break;
         case 'web-search':
           method = 'POST';
-          path = '/chat/search';
+          path = '/workflow-nodes/web-search';
           requestBody = requestText;
           break;
         case 'mcp-servers':
           method = 'POST';
-          path = '/mcp/register';
+          path = '/mcp/workspace/:workspaceId/servers';
           requestBody = requestText;
           break;
         case 'agent-conversation':

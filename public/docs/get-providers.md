@@ -4,9 +4,8 @@ Fetches all configured API key providers (e.g., OpenAI, Google, Tavily) register
 
 ### Endpoint Contract
 ```http
-GET /api/v1/providers
-Authorization: Bearer <your_developer_api_key>
-X-AetherFlow-Workspace: <workspace_id>
+GET /providers
+Authorization: Bearer af_live_your_integration_key_here
 ```
 
 ---

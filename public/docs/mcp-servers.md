@@ -4,7 +4,7 @@ Manage private Model Context Protocol (MCP) server endpoints registered in the w
 
 ### Endpoint Contract
 ```http
-POST /mcp/register
+POST /mcp/workspace/:workspaceId/servers
 Authorization: Bearer af_live_your_integration_key_here
 Content-Type: application/json
 ```

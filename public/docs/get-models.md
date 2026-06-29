@@ -4,9 +4,8 @@ Use this endpoint to fetch all active language models and media generators avail
 
 ### Endpoint Contract
 ```http
-GET /api/v1/models
-Authorization: Bearer <your_developer_api_key>
-X-AetherFlow-Workspace: <workspace_id>
+GET /ai-models/unified
+Authorization: Bearer af_live_your_integration_key_here
 ```
 
 ---

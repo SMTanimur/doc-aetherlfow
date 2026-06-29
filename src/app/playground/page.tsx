@@ -25,7 +25,7 @@ export default function PlaygroundPage() {
   const [agentId, setAgentId] = useState('6a336cf10849c7a4f5de4353');
   const [conversationId, setConversationId] = useState('6a3754210a3ca41735e03f56');
   const [token, setToken] = useState('af_live_42910aef192b');
-  const [baseUrl, setBaseUrl] = useState('/api/backend');
+  const [baseUrl, setBaseUrl] = useState('https://aetherflow-api.vercel.app');
 
   const [messages, setMessages] = useState<Message[]>([
     { role: 'assistant', content: 'Welcome to AetherFlow Interactive Playground! Configure your Integration Key and session parameters, then send a message to start conversing with your live agent.' }
