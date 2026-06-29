@@ -1,0 +1,35 @@
+# MCP Server Configurations
+
+Manage private Model Context Protocol (MCP) server endpoints registered in the workspace.
+
+### Endpoint Contract
+```http
+POST /mcp/register
+Authorization: Bearer <your_jwt_access_token>
+Content-Type: application/json
+```
+
+---
+
+### Request Body JSON
+```json
+{
+  "name": "Local Database Server",
+  "url": "http://localhost:5001/mcp",
+  "auth_header": "Bearer local_secret_8812"
+}
+```
+
+---
+
+### Response Payload
+```json
+{
+  "success": true,
+  "mcp_server": {
+    "id": "mcp_9901a88f",
+    "name": "Local Database Server",
+    "status": "connected"
+  }
+}
+```
