@@ -5,7 +5,7 @@ Deletes an active conversation thread and removes all of its cached messages.
 ### Endpoint Contract
 ```http
 DELETE /workspaces/ws_9021aef/conversations/thread_881a029c
-Authorization: Bearer <your_jwt_access_token>
+Authorization: Bearer af_live_your_integration_key_here
 ```
 
 ---

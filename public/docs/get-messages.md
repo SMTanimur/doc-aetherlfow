@@ -5,7 +5,7 @@ Fetches paginated list of chat history messages recorded inside a conversation t
 ### Endpoint Contract
 ```http
 GET /workspaces/ws_9021aef/conversations/thread_881a029c/messages?page=1&limit=20
-Authorization: Bearer <your_jwt_access_token>
+Authorization: Bearer af_live_your_integration_key_here
 ```
 
 ---

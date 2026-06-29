@@ -1,32 +1,33 @@
-# Authentication (Developer Login)
+# Integration Key Authentication Guide
 
-To invoke AetherFlow backend endpoints programmatically, developer clients must authenticate and obtain a temporary Bearer JSON Web Token (JWT).
+All AetherFlow API endpoints and SDKs authenticate requests using **Workspace Integration Keys** (`af_live_...`).
 
-### Endpoint Contract
+---
+
+### Authentication Contract
+Every programmatic HTTP request sent to AetherFlow must include your workspace Integration Key in the standard HTTP `Authorization` header using the `Bearer` scheme.
+
 ```http
-POST /auth/login
+Authorization: Bearer af_live_your_integration_key_here
 Content-Type: application/json
 ```
 
 ---
 
-### Request Body
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| **email** | `string` | Yes | Registered developer email account. |
-| **password** | `string` | Yes | Account password credentials. |
+### Key Format & Security
+- **Key Prefix**: Valid integration keys always start with `af_live_` (e.g., `af_live_42910aef192b...`).
+- **Workspace Scope**: Each key is permanently bound to your workspace. Requests made with an Integration Key inherit workspace permissions automatically.
+- **Header Example**:
+  ```http
+  POST /chat/stream HTTP/1.1
+  Host: aetherflow-api.vercel.app
+  Authorization: Bearer af_live_42910aef192b
+  Content-Type: application/json
+  ```
 
 ---
 
-### Response Payload
-```json
-{
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "user": {
-    "id": "60a7201b8e310dc411a00a12",
-    "name": "Alex Mercer",
-    "email": "alex@company.com",
-    "role": "user"
-  }
-}
-```
+### Managing Integration Keys
+Generate and manage integration keys directly in your workspace dashboard under **Workspace Settings > Integration Keys**.
+- Keep your keys secure and never expose them in client-side public repositories.
+- When generating keys, you can set an optional expiration period (`Never`, `30 Days`, or `3 Days`).

@@ -30,7 +30,7 @@ GET /quota/ws_9021aef3b129
 Configure whether the workspace utilizes platform credentials or custom private API keys.
 ```http
 PATCH /quota/ws_9021aef3b129/key-mode
-Authorization: Bearer <your_jwt_access_token>
+Authorization: Bearer af_live_your_integration_key_here
 Content-Type: application/json
 ```
 

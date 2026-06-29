@@ -5,7 +5,7 @@ Trigger a background search engine query via Tavily, returning structured search
 ### Endpoint Contract
 ```http
 POST /chat/search
-Authorization: Bearer <your_jwt_access_token>
+Authorization: Bearer af_live_your_integration_key_here
 Content-Type: application/json
 ```
 

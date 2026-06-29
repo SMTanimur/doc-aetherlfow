@@ -92,8 +92,8 @@ export const docsSections: DocSection[] = [
   {
     id: 'auth-login',
     category: 'API REFERENCE',
-    title: 'Developer Auth',
-    subtitle: 'Generate token authorizations via developer keys.',
+    title: 'Integration Key Auth',
+    subtitle: 'Authenticate API requests using workspace Integration Keys (af_live_...).',
     filePath: '/docs/auth-login.md'
   },
   {

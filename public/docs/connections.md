@@ -5,7 +5,7 @@ Connections are secure API credentials (e.g. Tavily API Keys, OpenAI keys) saved
 ### 1. Create Workspace Connection
 ```http
 POST /connections/workspace/ws_9021aef3b129
-Authorization: Bearer <your_jwt_access_token>
+Authorization: Bearer af_live_your_integration_key_here
 Content-Type: application/json
 ```
 

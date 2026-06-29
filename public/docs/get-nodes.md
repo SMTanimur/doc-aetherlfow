@@ -5,7 +5,7 @@ Fetches the configuration specifications and variables schemas for all registere
 ### Endpoint Contract
 ```http
 GET /workflow-nodes
-Authorization: Bearer <your_jwt_access_token>
+Authorization: Bearer af_live_your_integration_key_here
 ```
 
 ---

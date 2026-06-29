@@ -5,7 +5,7 @@ Fetches authenticated user account profiles and roles inside the system.
 ### Endpoint Contract
 ```http
 GET /users/me
-Authorization: Bearer <your_jwt_access_token>
+Authorization: Bearer af_live_your_integration_key_here
 ```
 
 ---

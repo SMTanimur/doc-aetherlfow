@@ -61,9 +61,7 @@ export default function Home() {
   // Live Playground Environment States
   const [baseUrl, setBaseUrl] = useState('https://aetherflow-api.vercel.app');
   const [workspaceId, setWorkspaceId] = useState('6a3329fedc827a13d85059fd');
-  const [token, setToken] = useState(
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InNtdGFuaW11cnJhaG1hbkBnbWFpbC5jb20iLCJzdWIiOiI2YTMwYmUwYjVhNzg3ZTdkZGJhMzc1OGQiLCJyb2xlcyI6WyJhZG1pbiIsInVzZXIiXSwiaWF0IjoxNzgyNDc2NTA0LCJleHAiOjE3ODMwODEzMDR9.ET3yKcVCwn30pUOs2m8aTq2XLLuW54L4YmxXE_rC3kw'
-  );
+  const [token, setToken] = useState('af_live_42910aef192b');
   const [showSettings, setShowSettings] = useState(false);
 
   // Request Runner States
@@ -250,7 +248,7 @@ export default function Home() {
           break;
         case 'agent-conversation':
           method = 'POST';
-          path = '/workspaces/:workspaceId/chat';
+          path = '/chat/stream';
           requestBody = requestText;
           break;
         case 'workflow-run':
@@ -290,14 +288,26 @@ export default function Home() {
       setLatency(duration);
       setResponseStatus(`HTTP ${response.status} ${response.statusText}`);
       
-      const resText = await response.text();
-      let formattedBody = resText;
-      try {
-        const parsedJson = JSON.parse(resText);
-        formattedBody = JSON.stringify(parsedJson, null, 2);
-      } catch {}
-      
-      setLiveResponse(formattedBody);
+      if (resolvedPath.includes('/chat/stream') && response.body) {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let accumulated = '';
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const chunk = decoder.decode(value, { stream: true });
+          accumulated += chunk;
+          setLiveResponse(accumulated);
+        }
+      } else {
+        const resText = await response.text();
+        let formattedBody = resText;
+        try {
+          const parsedJson = JSON.parse(resText);
+          formattedBody = JSON.stringify(parsedJson, null, 2);
+        } catch {}
+        setLiveResponse(formattedBody);
+      }
       setSimulated(true);
     } catch (err) {
       const duration = Math.round(performance.now() - startTime);
@@ -445,7 +455,7 @@ export default function Home() {
                     />
                   </div>
                   <div>
-                    <label className="block text-[8px] text-zinc-500 font-black uppercase mb-1">Bearer Token / JWT Key</label>
+                    <label className="block text-[8px] text-zinc-500 font-black uppercase mb-1">Workspace Integration Key (af_live_...)</label>
                     <textarea
                       value={token}
                       onChange={(e) => setToken(e.target.value)}
