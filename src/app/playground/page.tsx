@@ -21,10 +21,10 @@ interface Message {
 }
 
 export default function PlaygroundPage() {
-  const [workspaceId, setWorkspaceId] = useState('6a3329fedc827a13d85059fd');
-  const [agentId, setAgentId] = useState('6a336cf10849c7a4f5de4353');
-  const [conversationId, setConversationId] = useState('6a3754210a3ca41735e03f56');
-  const [token, setToken] = useState('af_live_42910aef192b');
+  const [workspaceId, setWorkspaceId] = useState('');
+  const [agentId, setAgentId] = useState('');
+  const [conversationId, setConversationId] = useState('');
+  const [token, setToken] = useState('');
   const [baseUrl, setBaseUrl] = useState('https://aetherflow-api.vercel.app');
 
   const [messages, setMessages] = useState<Message[]>([
@@ -214,6 +214,7 @@ export default function PlaygroundPage() {
                 type="text"
                 value={workspaceId}
                 onChange={(e) => setWorkspaceId(e.target.value)}
+                placeholder="Enter Workspace ObjectId"
                 className="w-full px-2.5 py-1.5 bg-zinc-950 border border-zinc-850 rounded-lg text-[10px] font-mono text-zinc-200 focus:outline-none focus:border-zinc-700 focus:ring-1 focus:ring-zinc-800"
               />
             </div>
@@ -224,6 +225,7 @@ export default function PlaygroundPage() {
                 type="text"
                 value={agentId}
                 onChange={(e) => setAgentId(e.target.value)}
+                placeholder="Enter Agent ObjectId"
                 className="w-full px-2.5 py-1.5 bg-zinc-950 border border-zinc-850 rounded-lg text-[10px] font-mono text-zinc-200 focus:outline-none focus:border-zinc-700 focus:ring-1 focus:ring-zinc-800"
               />
             </div>
@@ -236,7 +238,7 @@ export default function PlaygroundPage() {
                   value={conversationId}
                   onChange={(e) => setConversationId(e.target.value)}
                   className="flex-1 px-2.5 py-1.5 bg-zinc-950 border border-zinc-850 rounded-lg text-[10px] font-mono text-zinc-200 focus:outline-none focus:border-zinc-700 focus:ring-1 focus:ring-zinc-800"
-                  placeholder="e.g. thread_123"
+                  placeholder="Enter Conversation ObjectId"
                 />
                 <button
                   type="button"
@@ -256,6 +258,7 @@ export default function PlaygroundPage() {
                 type="password"
                 value={token}
                 onChange={(e) => setToken(e.target.value)}
+                placeholder="af_live_..."
                 className="w-full px-2.5 py-1.5 bg-zinc-950 border border-zinc-850 rounded-lg text-[10px] font-mono text-zinc-200 focus:outline-none focus:border-zinc-700 focus:ring-1 focus:ring-zinc-800"
               />
             </div>
