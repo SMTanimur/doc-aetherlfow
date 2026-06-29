@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { DocsSidebar } from '@/components/docs/docs-sidebar';
 import { MarkdownRenderer } from '@/components/docs/markdown-renderer';
 import { docsSections } from '@/lib/docs-data';
-import { Loader2, Play, CheckCircle, Terminal, Settings } from 'lucide-react';
+import { Loader2, Play, CheckCircle, Terminal, Settings, Sparkles, MessageSquare, ExternalLink, Layers } from 'lucide-react';
 
 interface CodeBlockType {
   lang: string;
@@ -51,6 +52,18 @@ function highlightCode(code: string): React.ReactNode {
 }
 
 export default function Home() {
+  const [appUrl, setAppUrl] = useState('');
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const port = window.location.port;
+      if (port === '3000') {
+        setAppUrl('');
+      } else {
+        setAppUrl(`${window.location.protocol}//${window.location.hostname}:3000`);
+      }
+    }
+  }, []);
+
   const [activeSectionId, setActiveSectionId] = useState('overview');
   const [searchQuery, setSearchQuery] = useState('');
   const [cleanText, setCleanText] = useState('');
@@ -345,20 +358,42 @@ export default function Home() {
       {/* Main Documentation Container */}
       <main className="flex-1 flex flex-col h-full min-w-0 bg-white">
         {/* Top Header Bar */}
-        <div className="h-14 border-b border-zinc-200 px-8 flex items-center justify-between bg-zinc-50/20 backdrop-blur flex-shrink-0">
-          <div className="flex items-center gap-2 text-[10px] font-bold text-zinc-450 tracking-wider">
-            <span>AetherFlow Docs</span>
+        <div className="h-14 border-b border-zinc-200/80 px-8 flex items-center justify-between bg-white/70 backdrop-blur-md sticky top-0 z-40 flex-shrink-0">
+          <div className="flex items-center gap-2.5 text-[10px] font-bold text-zinc-500 tracking-wider">
+            <span className="bg-gradient-to-r from-indigo-600 to-indigo-800 text-white px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider shadow-sm">AetherFlow</span>
+            <span>Docs</span>
             <span className="text-zinc-300">/</span>
-            <span className="text-zinc-500 uppercase tracking-widest">{activeSection.category}</span>
+            <span className="text-zinc-400 uppercase tracking-widest">{activeSection.category}</span>
             <span className="text-zinc-300">/</span>
             <span className="text-zinc-800 uppercase tracking-widest">{activeSection.title}</span>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
+            {/* Quick Links Navigation */}
+            <div className="flex items-center gap-2 border-r border-zinc-200 pr-4">
+              <Link
+                href="/playground"
+                className="group flex items-center gap-2 px-3 py-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 hover:border-zinc-300 text-[10px] font-bold text-zinc-700 hover:text-zinc-900 shadow-sm transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0"
+              >
+                <Layers size={12} className="text-zinc-500 group-hover:text-indigo-600 transition-colors" />
+                <span>Playground Page</span>
+                <Sparkles size={10} className="text-indigo-500 group-hover:text-indigo-600 transition-colors animate-pulse" />
+              </Link>
+
+              <Link
+                href="/playground"
+                className="group flex items-center gap-2 px-3 py-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 hover:border-zinc-300 text-[10px] font-bold text-zinc-700 hover:text-zinc-900 shadow-sm transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0"
+              >
+                <MessageSquare size={12} className="text-zinc-500 group-hover:text-indigo-600 transition-colors" />
+                <span>Conversations</span>
+                <Sparkles size={10} className="text-indigo-500 group-hover:text-indigo-600 transition-colors animate-pulse" />
+              </Link>
+            </div>
+
             <a
               href="https://smtanimur.com/"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[10px] font-extrabold text-zinc-650 hover:text-zinc-900 border border-zinc-200 hover:border-zinc-300 px-3 py-1.5 rounded-lg bg-white shadow-sm transition-colors"
+              className="text-[10px] font-black text-zinc-650 hover:text-zinc-900 border border-zinc-200 hover:border-zinc-300 px-3 py-1.5 rounded-lg bg-zinc-50/50 hover:bg-white shadow-sm transition-all duration-200"
             >
               Developer Profile
             </a>

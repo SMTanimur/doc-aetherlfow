@@ -44,7 +44,7 @@ Authorization: Bearer af_live_your_integration_key_here
 
 #### 1. cURL Example
 ```bash
-curl -X POST https://aetherflow-api.vercel.app/chat/stream \
+curl -X POST http://localhost:3000/api/backend/chat/stream \
   -H "Authorization: Bearer af_live_42910aef192b" \
   -H "Content-Type: application/json" \
   -d '{
@@ -56,7 +56,7 @@ curl -X POST https://aetherflow-api.vercel.app/chat/stream \
 #### 2. JavaScript / Node.js Fetch Streaming Example
 ```javascript
 async function streamAgentResponse(prompt) {
-  const response = await fetch('https://aetherflow-api.vercel.app/chat/stream', {
+  const response = await fetch('http://localhost:3000/api/backend/chat/stream', {
     method: 'POST',
     headers: {
       'Authorization': 'Bearer af_live_42910aef192b',
@@ -84,7 +84,7 @@ async function streamAgentResponse(prompt) {
 ```python
 import requests
 
-url = "https://aetherflow-api.vercel.app/chat/stream"
+url = "http://localhost:3000/api/backend/chat/stream"
 headers = {
     "Authorization": "Bearer af_live_42910aef192b",
     "Content-Type": "application/json"
