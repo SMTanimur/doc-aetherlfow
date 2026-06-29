@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { DocsSidebar } from '@/components/docs/docs-sidebar';
 import { MarkdownRenderer } from '@/components/docs/markdown-renderer';
 import { docsSections } from '@/lib/docs-data';
-import { Loader2, Play, CheckCircle, Terminal } from 'lucide-react';
+import { Loader2, Play, CheckCircle, Terminal, Settings } from 'lucide-react';
 
 interface CodeBlockType {
   lang: string;
@@ -22,7 +22,7 @@ function highlightCode(code: string): React.ReactNode {
 
   const highlighted = esc.replace(tokenRegex, (match, comment, string, number, keyword) => {
     if (comment) {
-      return `<span class="text-zinc-500 font-normal">${match}</span>`;
+      return `<span class="text-zinc-550 font-normal">${match}</span>`;
     }
     if (string) {
       return `<span class="text-amber-300">${match}</span>`;
@@ -35,7 +35,7 @@ function highlightCode(code: string): React.ReactNode {
         return `<span class="text-indigo-400 font-bold">${match}</span>`;
       }
       if (['true', 'false', 'null'].includes(keyword)) {
-        return `<span class="text-emerald-450 font-bold">${match}</span>`;
+        return `<span class="text-emerald-455 font-bold">${match}</span>`;
       }
       return `<span class="text-indigo-400 font-semibold">${match}</span>`;
     }
@@ -55,11 +55,23 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [cleanText, setCleanText] = useState('');
   const [codeBlocks, setCodeBlocks] = useState<CodeBlockType[]>([]);
+  const [editableBlocks, setEditableBlocks] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Playground simulation states
+  // Live Playground Environment States
+  const [baseUrl, setBaseUrl] = useState('https://aetherflow-api.vercel.app');
+  const [workspaceId, setWorkspaceId] = useState('6a3329fedc827a13d85059fd');
+  const [token, setToken] = useState(
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InNtdGFuaW11cnJhaG1hbkBnbWFpbC5jb20iLCJzdWIiOiI2YTMwYmUwYjVhNzg3ZTdkZGJhMzc1OGQiLCJyb2xlcyI6WyJhZG1pbiIsInVzZXIiXSwiaWF0IjoxNzgyNDc2NTA0LCJleHAiOjE3ODMwODEzMDR9.ET3yKcVCwn30pUOs2m8aTq2XLLuW54L4YmxXE_rC3kw'
+  );
+  const [showSettings, setShowSettings] = useState(false);
+
+  // Request Runner States
   const [simulating, setSimulating] = useState(false);
   const [simulated, setSimulated] = useState(false);
+  const [liveResponse, setLiveResponse] = useState('');
+  const [responseStatus, setResponseStatus] = useState('');
+  const [latency, setLatency] = useState(0);
 
   const activeSection = docsSections.find(sec => sec.id === activeSectionId) || docsSections[0];
 
@@ -68,6 +80,8 @@ export default function Home() {
     setLoading(true);
     setSimulated(false);
     setSimulating(false);
+    setLiveResponse('');
+    setResponseStatus('');
 
     fetch(activeSection.filePath)
       .then((res) => {
@@ -77,7 +91,7 @@ export default function Home() {
       .then((text) => {
         if (active) {
           // Parse code blocks dynamically
-          const blocks: CodeBlockType[] = [];
+          let blocks: CodeBlockType[] = [];
           const regex = /```(\w*)\n([\s\S]*?)```/g;
           let match;
           
@@ -88,11 +102,34 @@ export default function Home() {
             });
           }
 
+          // Check if this is a POST/PUT endpoint page that separates headers (block 0) and JSON request body (block 1)
+          const isPostOrPut = activeSectionId === 'auth-login' || 
+                              activeSectionId === 'connections' || 
+                              activeSectionId === 'web-search' || 
+                              activeSectionId === 'mcp-servers' || 
+                              activeSectionId === 'agent-conversation' || 
+                              activeSectionId === 'workflow-run' || 
+                              activeSectionId === 'webhook-trigger';
+
+          if (isPostOrPut && blocks.length >= 2) {
+            const block0 = blocks[0];
+            const block1 = blocks[1];
+            if (block0.lang === 'http' && block1.lang === 'json') {
+              const mergedCode = `${block0.code}\n\n${block1.code}`;
+              const mergedBlock: CodeBlockType = {
+                lang: 'http',
+                code: mergedCode
+              };
+              blocks = [mergedBlock, ...blocks.slice(2)];
+            }
+          }
+
           // Strip code blocks to get narrative content for the center pane
           const narrative = text.replace(/```\w*\n[\s\S]*?```/g, '').trim();
 
           setCleanText(narrative);
           setCodeBlocks(blocks);
+          setEditableBlocks(blocks.map(b => b.code));
           setLoading(false);
         }
       })
@@ -100,6 +137,7 @@ export default function Home() {
         if (active) {
           setCleanText(`Failed to load document: ${err instanceof Error ? err.message : String(err)}`);
           setCodeBlocks([]);
+          setEditableBlocks([]);
           setLoading(false);
         }
       });
@@ -107,15 +145,181 @@ export default function Home() {
     return () => {
       active = false;
     };
-  }, [activeSection.filePath]);
+  }, [activeSection.filePath, activeSectionId]);
 
-  const handleSimulate = () => {
+  const handleRunTest = async () => {
     setSimulating(true);
     setSimulated(false);
-    setTimeout(() => {
-      setSimulating(false);
+    setLiveResponse('');
+    setResponseStatus('');
+    setLatency(0);
+
+    const requestText = editableBlocks[0] || '';
+    
+    let method = 'GET';
+    let path = '';
+    const headers: Record<string, string> = {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    };
+    let requestBody: string | undefined = undefined;
+
+    // Parse HTTP verb and path if explicitly defined
+    const lines = requestText.trim().split('\n');
+    const firstLine = lines[0].trim();
+    const httpVerbRegex = /^(GET|POST|PUT|DELETE|PATCH)\s+(\S+)/i;
+    const httpMatch = firstLine.match(httpVerbRegex);
+
+    if (httpMatch) {
+      method = httpMatch[1].toUpperCase();
+      path = httpMatch[2];
+      
+      const bodyLines: string[] = [];
+      let parsingHeaders = true;
+      
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (parsingHeaders) {
+          if (line === '') {
+            parsingHeaders = false;
+          } else if (line.includes(':')) {
+            const colonIndex = line.indexOf(':');
+            const hName = line.slice(0, colonIndex).trim();
+            const hVal = line.slice(colonIndex + 1).trim();
+            if (hName.toLowerCase() !== 'authorization') {
+              headers[hName] = hVal;
+            }
+          } else {
+            parsingHeaders = false;
+            bodyLines.push(lines[i]);
+          }
+        } else {
+          bodyLines.push(lines[i]);
+        }
+      }
+      const rawBody = bodyLines.join('\n').trim();
+      if (rawBody && method !== 'GET') {
+        requestBody = rawBody;
+      }
+    } else {
+      // Map routes dynamically if it is a pure JSON payload
+      switch (activeSectionId) {
+        case 'auth-login':
+          method = 'POST';
+          path = '/auth/login';
+          requestBody = requestText;
+          break;
+        case 'connections':
+          method = 'POST';
+          path = '/workspaces/:workspaceId/connections';
+          requestBody = requestText;
+          break;
+        case 'get-models':
+          method = 'GET';
+          path = '/models';
+          break;
+        case 'get-providers':
+          method = 'GET';
+          path = '/providers';
+          break;
+        case 'get-profile':
+          method = 'GET';
+          path = '/users/me';
+          break;
+        case 'get-messages':
+          method = 'GET';
+          path = '/workspaces/:workspaceId/conversations/thread_881a029c/messages';
+          break;
+        case 'delete-thread':
+          method = 'DELETE';
+          path = '/workspaces/:workspaceId/conversations/thread_881a029c';
+          break;
+        case 'get-nodes':
+          method = 'GET';
+          path = '/workflow-nodes';
+          break;
+        case 'web-search':
+          method = 'POST';
+          path = '/chat/search';
+          requestBody = requestText;
+          break;
+        case 'mcp-servers':
+          method = 'POST';
+          path = '/mcp/register';
+          requestBody = requestText;
+          break;
+        case 'agent-conversation':
+          method = 'POST';
+          path = '/workspaces/:workspaceId/chat';
+          requestBody = requestText;
+          break;
+        case 'workflow-run':
+          method = 'POST';
+          path = '/workspaces/:workspaceId/workflows/run';
+          requestBody = requestText;
+          break;
+        case 'webhook-trigger':
+          method = 'POST';
+          path = '/workspaces/:workspaceId/webhooks/run';
+          requestBody = requestText;
+          break;
+        default:
+          method = 'GET';
+          path = '/';
+          break;
+      }
+    }
+
+    // Resolve URL path variables
+    const resolvedPath = path.replace(/:workspaceId/g, workspaceId);
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const finalUrl = `${baseUrl.replace(/\/$/, '')}${resolvedPath}`;
+    const startTime = performance.now();
+
+    try {
+      const response = await fetch(finalUrl, {
+        method,
+        headers,
+        body: method !== 'GET' ? requestBody : undefined,
+      });
+      
+      const duration = Math.round(performance.now() - startTime);
+      setLatency(duration);
+      setResponseStatus(`HTTP ${response.status} ${response.statusText}`);
+      
+      const resText = await response.text();
+      let formattedBody = resText;
+      try {
+        const parsedJson = JSON.parse(resText);
+        formattedBody = JSON.stringify(parsedJson, null, 2);
+      } catch {}
+      
+      setLiveResponse(formattedBody);
       setSimulated(true);
-    }, 1200);
+    } catch (err) {
+      const duration = Math.round(performance.now() - startTime);
+      setLatency(duration);
+      setResponseStatus('Network Error / CORS Blocked');
+      setLiveResponse(JSON.stringify({
+        error: "CORS Blocked or Server Offline",
+        message: err instanceof Error ? err.message : String(err),
+        tip: "Note: Live browser requests will fail if CORS rules are not open on the server. Review settings below.",
+        requestDetails: {
+          url: finalUrl,
+          method,
+          headersSent: {
+            ...headers,
+            Authorization: token ? `Bearer ${token.slice(0, 15)}...` : 'none'
+          }
+        }
+      }, null, 2));
+      setSimulated(true);
+    } finally {
+      setSimulating(false);
+    }
   };
 
   return (
@@ -179,7 +383,7 @@ export default function Home() {
           </div>
 
           {/* Right Column: Code & Response Playground */}
-          <div className="w-[460px] bg-zinc-950 border-l border-zinc-900 flex flex-col h-full flex-shrink-0 select-none overflow-hidden">
+          <div className="w-[460px] bg-zinc-950 border-l border-zinc-900 flex flex-col h-full flex-shrink-0 select-none overflow-hidden font-sans">
             {/* Terminal Window Header */}
             <div className="p-4 border-b border-zinc-900 flex items-center justify-between text-zinc-400 bg-zinc-900/30">
               <div className="flex items-center gap-3">
@@ -194,17 +398,64 @@ export default function Home() {
                   <span className="text-[10px] font-extrabold tracking-wider uppercase text-zinc-300">API Playground</span>
                 </div>
               </div>
-              {codeBlocks.length > 0 && (
+              <div className="flex items-center gap-2">
                 <button
-                  disabled={simulating}
-                  onClick={handleSimulate}
-                  className="px-2.5 py-1 rounded bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-bold flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors shadow"
+                  onClick={() => setShowSettings(!showSettings)}
+                  className={`p-1.5 rounded border border-zinc-800 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 cursor-pointer transition-colors ${
+                    showSettings ? 'bg-zinc-800 text-indigo-400' : 'bg-transparent'
+                  }`}
+                  title="Configure Credentials"
                 >
-                  {simulating ? <Loader2 size={10} className="animate-spin" /> : <Play size={10} />}
-                  Run Test
+                  <Settings size={12} />
                 </button>
-              )}
+                {codeBlocks.length > 0 && (
+                  <button
+                    disabled={simulating}
+                    onClick={handleRunTest}
+                    className="px-2.5 py-1 rounded bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-bold flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors shadow"
+                  >
+                    {simulating ? <Loader2 size={10} className="animate-spin" /> : <Play size={10} />}
+                    Run Test
+                  </button>
+                )}
+              </div>
             </div>
+
+            {/* Collapsible Environment Credentials Settings */}
+            {showSettings && (
+              <div className="p-4 border-b border-zinc-900 bg-zinc-900/20 space-y-3">
+                <div className="text-[9px] font-black text-zinc-550 uppercase tracking-widest">Environment Setup</div>
+                <div className="space-y-2.5">
+                  <div>
+                    <label className="block text-[8px] text-zinc-500 font-black uppercase mb-1">API Base URL</label>
+                    <input
+                      type="text"
+                      value={baseUrl}
+                      onChange={(e) => setBaseUrl(e.target.value)}
+                      className="w-full px-2.5 py-1.5 bg-zinc-950 border border-zinc-850 rounded text-[10px] font-mono text-zinc-200 focus:outline-none focus:border-zinc-700"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[8px] text-zinc-500 font-black uppercase mb-1">Workspace ID</label>
+                    <input
+                      type="text"
+                      value={workspaceId}
+                      onChange={(e) => setWorkspaceId(e.target.value)}
+                      className="w-full px-2.5 py-1.5 bg-zinc-950 border border-zinc-850 rounded text-[10px] font-mono text-zinc-200 focus:outline-none focus:border-zinc-700"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[8px] text-zinc-500 font-black uppercase mb-1">Bearer Token / JWT Key</label>
+                    <textarea
+                      value={token}
+                      onChange={(e) => setToken(e.target.value)}
+                      rows={2}
+                      className="w-full px-2.5 py-1.5 bg-zinc-950 border border-zinc-850 rounded text-[9.5px] font-mono text-zinc-200 focus:outline-none focus:border-zinc-700 resize-none leading-normal"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {codeBlocks.length === 0 ? (
@@ -227,9 +478,22 @@ export default function Home() {
                           <span>{isResponse ? 'RESPONSE BODY' : 'REQUEST SPECIFICATION'}</span>
                           <span>{block.lang}</span>
                         </div>
-                        <pre className="p-3.5 overflow-x-auto bg-zinc-900/40 select-text">
-                          {highlightCode(block.code)}
-                        </pre>
+                        {idx === 0 ? (
+                          <textarea
+                            value={editableBlocks[idx] !== undefined ? editableBlocks[idx] : block.code}
+                            onChange={(e) => {
+                              const newBlocks = [...editableBlocks];
+                              newBlocks[idx] = e.target.value;
+                              setEditableBlocks(newBlocks);
+                            }}
+                            rows={Math.max(4, (editableBlocks[idx] || block.code).split('\n').length)}
+                            className="w-full p-3.5 bg-zinc-900/10 text-zinc-200 font-mono text-[10.5px] leading-relaxed focus:outline-none resize-y border-0 min-h-[90px] select-text"
+                          />
+                        ) : (
+                          <pre className="p-3.5 overflow-x-auto bg-zinc-900/40 select-text">
+                            {highlightCode(isResponse && simulated && liveResponse ? liveResponse : block.code)}
+                          </pre>
+                        )}
                       </div>
                     );
                   })}
@@ -238,16 +502,26 @@ export default function Home() {
                   {simulating && (
                     <div className="p-3 rounded-lg bg-zinc-900 border border-zinc-800 text-[10px] text-zinc-400 font-semibold flex items-center gap-2 animate-pulse">
                       <Loader2 size={12} className="animate-spin text-indigo-400" />
-                      <span>Resolving upstream parameters and checking quotas...</span>
+                      <span>Sending network payload and waiting for server response...</span>
                     </div>
                   )}
 
                   {simulated && (
-                    <div className="p-3 rounded-lg bg-emerald-950/20 border border-emerald-800/40 text-[10px] text-emerald-400 font-semibold flex items-start gap-2">
-                      <CheckCircle size={14} className="text-emerald-500 flex-shrink-0 mt-0.5" />
+                    <div className={`p-3 rounded-lg border text-[10px] font-semibold flex items-start gap-2 ${
+                      responseStatus.includes('200') || responseStatus.includes('201')
+                        ? 'bg-emerald-950/20 border-emerald-800/40 text-emerald-400'
+                        : 'bg-rose-950/20 border-rose-800/40 text-rose-400'
+                    }`}>
+                      <CheckCircle size={14} className={`flex-shrink-0 mt-0.5 ${
+                        responseStatus.includes('200') || responseStatus.includes('201') ? 'text-emerald-500' : 'text-rose-500'
+                      }`} />
                       <div>
-                        <div className="font-bold">HTTP 200 OK (145ms)</div>
-                        <div className="text-[9px] text-emerald-500/80 font-normal mt-0.5">Estimated quota cost: 0.0038 credits. Run execution logs completed.</div>
+                        <div className="font-bold">{responseStatus} ({latency}ms)</div>
+                        <div className="text-[9px] font-normal mt-0.5 opacity-80">
+                          {responseStatus.includes('200') || responseStatus.includes('201')
+                            ? 'Request processed successfully. Data retrieved from API server.'
+                            : 'Request execution completed with status notifications.'}
+                        </div>
                       </div>
                     </div>
                   )}
