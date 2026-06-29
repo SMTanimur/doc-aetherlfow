@@ -11,6 +11,45 @@ interface CodeBlockType {
   code: string;
 }
 
+function highlightCode(code: string): React.ReactNode {
+  let esc = code
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+  // Match: comments, strings, numeric constants, and reserved keywords
+  const tokenRegex = /(\/\/.*|\#.*)|(["'][\s\S]*?['"])|(\b\d+\b)|\b(const|let|var|function|return|await|async|try|catch|import|from|require|def|except|class|with|as|print|sys|module|exports|POST|GET|DELETE|PATCH|Authorization|Bearer|Content-Type|true|false|null)\b/g;
+
+  const highlighted = esc.replace(tokenRegex, (match, comment, string, number, keyword) => {
+    if (comment) {
+      return `<span class="text-zinc-500 font-normal">${match}</span>`;
+    }
+    if (string) {
+      return `<span class="text-amber-300">${match}</span>`;
+    }
+    if (number) {
+      return `<span class="text-sky-400">${match}</span>`;
+    }
+    if (keyword) {
+      if (['POST', 'GET', 'DELETE', 'PATCH', 'Authorization', 'Bearer', 'Content-Type'].includes(keyword)) {
+        return `<span class="text-indigo-400 font-bold">${match}</span>`;
+      }
+      if (['true', 'false', 'null'].includes(keyword)) {
+        return `<span class="text-emerald-450 font-bold">${match}</span>`;
+      }
+      return `<span class="text-indigo-400 font-semibold">${match}</span>`;
+    }
+    return match;
+  });
+
+  return (
+    <code
+      className="font-mono text-[10.5px] leading-relaxed block text-zinc-200"
+      dangerouslySetInnerHTML={{ __html: highlighted }}
+    />
+  );
+}
+
 export default function Home() {
   const [activeSectionId, setActiveSectionId] = useState('overview');
   const [searchQuery, setSearchQuery] = useState('');
@@ -90,7 +129,7 @@ export default function Home() {
       />
 
       {/* Main Documentation Container */}
-      <main className="flex-1 flex h-full min-w-0 bg-white">
+      <main className="flex-1 flex flex-col h-full min-w-0 bg-white">
         {/* Top Header Bar */}
         <div className="h-14 border-b border-zinc-200 px-8 flex items-center justify-between bg-zinc-50/20 backdrop-blur flex-shrink-0">
           <div className="flex items-center gap-2 text-[10px] font-bold text-zinc-450 tracking-wider">
@@ -140,11 +179,20 @@ export default function Home() {
           </div>
 
           {/* Right Column: Code & Response Playground */}
-          <div className="w-[420px] bg-zinc-950 border-l border-zinc-900 flex flex-col h-full flex-shrink-0 select-none overflow-hidden">
+          <div className="w-[460px] bg-zinc-950 border-l border-zinc-900 flex flex-col h-full flex-shrink-0 select-none overflow-hidden">
+            {/* Terminal Window Header */}
             <div className="p-4 border-b border-zinc-900 flex items-center justify-between text-zinc-400 bg-zinc-900/30">
-              <div className="flex items-center gap-2">
-                <Terminal size={14} className="text-indigo-400" />
-                <span className="text-[10px] font-extrabold tracking-wider uppercase text-zinc-300">API Console Playground</span>
+              <div className="flex items-center gap-3">
+                {/* macOS Style Window Controls */}
+                <div className="flex gap-1.5 items-center">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f]" />
+                </div>
+                <div className="flex items-center gap-1.5 border-l border-zinc-800 pl-3">
+                  <Terminal size={13} className="text-indigo-400" />
+                  <span className="text-[10px] font-extrabold tracking-wider uppercase text-zinc-300">API Playground</span>
+                </div>
               </div>
               {codeBlocks.length > 0 && (
                 <button
@@ -179,8 +227,8 @@ export default function Home() {
                           <span>{isResponse ? 'RESPONSE BODY' : 'REQUEST SPECIFICATION'}</span>
                           <span>{block.lang}</span>
                         </div>
-                        <pre className="p-3 overflow-x-auto text-[10px] font-mono text-zinc-200 leading-relaxed bg-zinc-900/60 select-text">
-                          {block.code}
+                        <pre className="p-3.5 overflow-x-auto bg-zinc-900/40 select-text">
+                          {highlightCode(block.code)}
                         </pre>
                       </div>
                     );
