@@ -1,71 +1,56 @@
 # Architecture Design
 
-AetherFlow is built on a **visual node-graph execution engine**. Each agent is a directed acyclic graph (DAG) of typed nodes connected by data edges. When a user sends a message, the runtime traverses the graph, executes each node in topological order, and streams the final output back to the caller.
+AetherFlow compiles visual canvas topologies into a **Directed Acyclic Graph (DAG) state machine**. This architecture allows you to chain raw trigger inputs, conditional logic branches, custom tools, and output sinks into a unified, serverless execution context.
 
 ---
 
-### Execution Pipeline
+### Data Flow Execution Pipeline
+
+Below is the lifecycle of an execution trigger (for example, a parsed inbound email route):
 
 ```
-User Request
-     │
-     ▼
+Inbound Trigger (Webhook / API)
+         │
+         ▼
 ┌────────────────┐     ┌──────────────┐     ┌────────────────┐
-│  Auth / Rate   │────▶│  Workspace   │────▶│  Node Graph    │
-│  Gate (Guard)  │     │  Resolver    │     │  Executor      │
+│  Auth Guard    │────▶│  Credential  │────▶│  Topological   │
+│  (FlexAuth)    │     │  Resolver    │     │  Graph Engine  │
 └────────────────┘     └──────────────┘     └────────────────┘
                                                     │
-                          ┌─────────────────────────┤
-                          ▼                         ▼
-                   ┌─────────────┐         ┌──────────────────┐
-                   │  LLM Router │         │  Tool Nodes      │
-                   │  (OpenRouter│         │  Web Search, MCP,│
-                   │   / Direct) │         │  HTTP, Code, DB  │
-                   └─────────────┘         └──────────────────┘
-                          │
-                          ▼
-                   ┌─────────────┐
-                   │ SSE Stream  │──▶ Client / Widget / SDK
-                   │  Response   │
-                   └─────────────┘
+                      ┌─────────────────────────────┤
+                      ▼                             ▼
+             ┌─────────────────┐           ┌──────────────────┐
+             │ LLM Solver Node │           │ Custom Tool Nodes│
+             │ GPT-4o / Claude │           │ Web Search, MCP, │
+             │ JSON extraction │           │ Database Queries │
+             └─────────────────┘           └──────────────────┘
+                      │                             │
+                      └──────────────┬──────────────┘
+                                     ▼
+                            ┌─────────────────┐
+                            │ Webhook Outbox  │ ──▶ External ERP
+                            │ (SAP/Cargonexx) │
+                            └─────────────────┘
 ```
 
 ---
 
-### Core Node Types
+### Core Pipeline Node Types
 
-| Node | Category | Description |
+| Node Type | Category | Core Purpose |
 | :--- | :--- | :--- |
-| **Chat Input** | I/O | Entry point that receives the user message |
-| **LLM** | AI | Routes to any configured model via OpenRouter or direct API |
-| **Chat Output** | I/O | Streams the final assistant response to the caller |
-| **Web Search** | Tool | Runs a Tavily-powered real-time search query |
-| **HTTP Request** | Tool | Calls any external REST endpoint with custom headers |
-| **Code** | Tool | Executes sandboxed JavaScript or Python snippets |
-| **MCP Server** | Tool | Connects to Model Context Protocol tool servers |
-| **Conditional** | Logic | Branches execution flow based on LLM or data conditions |
-| **Agent Node** | Orchestration | Embeds another published agent as a subgraph |
+| **Trigger Input** | I/O | Receives unstructured raw strings (emails, messages) from API calls or webhooks |
+| **LLM Solver** | AI | Processes prompts, formats outputs via strict schemas, and routes to selected providers |
+| **Web Search** | Tool | Queries search engines (Tavily) to augment prompts with real-time web facts |
+| **Database Connector** | Tool | Connects directly to PostgreSQL, MySQL, or MongoDB databases inside the workspace |
+| **MCP Server** | Tool | Interlaces Model Context Protocol tool endpoints directly into LLM nodes |
+| **HTTP Action** | Tool | Executes custom requests to external endpoints (e.g. POST manifests to Cargonexx) |
 
 ---
 
-### Multi-Tenant Isolation
+### Safe Multi-Tenant Architecture
 
-- **Database Layer** — Each workspace's data is namespace-isolated by `workspaceId` on every MongoDB collection. No cross-tenant queries are possible.
-- **Quota Enforcement** — A pre-execution middleware checks `token_quota_used < quota_limit` before forwarding to any LLM. Exhausted workspaces receive `HTTP 429`.
-- **Credential Vault** — Provider API keys (OpenAI, Anthropic, etc.) are stored encrypted per-workspace and resolved at runtime inside the backend — never exposed to clients.
-- **Execution Isolation** — Each workflow run spawns an isolated async context with its own timeout, retry budget, and execution log record.
-
----
-
-### Technology Stack
-
-| Layer | Technology |
-| :--- | :--- |
-| **Frontend** | Next.js 15, React 19, Tailwind CSS v4 |
-| **Canvas** | React Flow (custom node renderer) |
-| **Backend** | NestJS, MongoDB (Mongoose), Vercel AI SDK |
-| **Streaming** | Server-Sent Events (SSE) via Vercel AI SDK `streamText` |
-| **Auth** | JWT (user sessions) + Integration Keys (API access) |
-| **LLM Routing** | OpenRouter unified API + direct provider integrations |
-| **Search** | Tavily Search API |
-| **MCP** | Model Context Protocol client via `@modelcontextprotocol/sdk` |
+- **Context Isolation** — Each run spins up an isolated node state. Data variable references like `{{trigger.body.subject}}` are compiled on-the-fly and cleaned up immediately after run completion.
+- **Quota Enforcer** — A pre-flight guard verifies workspace credit balances before routing payloads to LLM APIs, preventing runaways.
+- **Envelope Encryption** — API keys stored in workspace Connections are encrypted at rest using AES-256-GCM.
+- **Visual Compile** — The React Flow canvas exports node states into a clean JSON manifest. The backend validates and compile-checks this graph before publish.
