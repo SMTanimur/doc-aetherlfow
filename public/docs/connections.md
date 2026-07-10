@@ -1,47 +1,82 @@
-# Workspace Connections Setup
+# Workspace Connections
 
-Connections are secure API credentials (e.g. Tavily API Keys, OpenAI keys) saved in the workspace. Node executions query these connections to execute tools.
+Connections are encrypted API credentials (OpenAI keys, Tavily keys, etc.) stored securely in your workspace. Node executions reference connections by ID — your raw API keys are never exposed to clients.
 
-### 1. Create Workspace Connection
+---
+
+### Endpoint
+
 ```http
-POST /connections/workspace/ws_9021aef3b129
-Authorization: Bearer af_live_your_integration_key_here
+POST /workspaces/:wsId/connections
+Authorization: Bearer af_live_42910aef192b
 Content-Type: application/json
-```
 
----
-
-### Request Body
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| **provider** | `string` | Yes | Target provider service (e.g. `tavily`, `openai`). |
-| **name** | `string` | Yes | Custom identifier label for the connection. |
-| **credentials** | `object` | Yes | Object containing sensitive API keys. |
-
----
-
-### Request Body JSON
-```json
 {
   "provider": "tavily",
-  "name": "My Tavily Web Search Key",
+  "name": "Tavily Web Search Key",
   "credentials": {
-    "apiKey": "tvly-prod-XXXXXXX"
+    "apiKey": "tvly-prod-XXXXXXXXXXXXXXXX"
   }
 }
 ```
 
 ---
 
-### Response Payload
+### Request Schema
+
+| Field | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `provider` | `string` | ✅ | Provider identifier (e.g. `openai`, `tavily`, `anthropic`) |
+| `name` | `string` | ✅ | Human-readable label shown in the canvas node picker |
+| `credentials` | `object` | ✅ | Provider-specific credential fields |
+
+### Credentials by Provider
+
+| Provider | Credential Key | Example |
+| :--- | :--- | :--- |
+| `openai` | `apiKey` | `sk-proj-...` |
+| `anthropic` | `apiKey` | `sk-ant-...` |
+| `tavily` | `apiKey` | `tvly-prod-...` |
+| `google` | `apiKey` | `AIza...` |
+
+---
+
+### Response Schema
+
 ```json
 {
   "success": true,
   "connection": {
-    "id": "conn_60b819f20109",
+    "_id": "68490a3f2c1e4b90012345ab",
     "provider": "tavily",
-    "name": "My Tavily Web Search Key",
-    "createdAt": "2026-06-29T09:34:00Z"
+    "name": "Tavily Web Search Key",
+    "workspaceId": "6a3329fedc827a13d85059fd",
+    "createdAt": "2026-07-09T10:34:00Z"
   }
 }
 ```
+
+Raw credential values are **never returned** in any response after creation.
+
+---
+
+### List Connections
+
+```http
+GET /workspaces/:wsId/connections
+Authorization: Bearer af_live_42910aef192b
+```
+
+Returns all connections for the workspace with masked credential values.
+
+---
+
+### Delete a Connection
+
+```http
+DELETE /workspaces/:wsId/connections/:connectionId
+Authorization: Bearer af_live_42910aef192b
+```
+
+> [!WARNING]
+> Deleting a connection that is referenced by active workflow nodes will cause those nodes to fail at execution time. Update the node configuration before deleting.

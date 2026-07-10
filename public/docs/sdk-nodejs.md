@@ -1,92 +1,116 @@
-# NodeJS SDK Guide
+# Node.js SDK Guide
 
-Official integration package to run workflows, chat threads, and manage connections on your backend server.
+The official `@aetherflow/sdk` package gives you a typed TypeScript client to stream AI completions, manage conversations, and list agents — with zero boilerplate.
 
-### 1. Installation
-Install the package inside your project directory:
+---
+
+### Installation
+
 ```bash
+# npm
 npm install @aetherflow/sdk
+
+# yarn
+yarn add @aetherflow/sdk
+
+# bun
+bun add @aetherflow/sdk
 ```
 
 ---
 
-### 2. Client Initialization
-Configure authorization and set connection timeout properties:
-```javascript
-const { AetherFlowClient } = require('@aetherflow/sdk');
+### Initialize the Client
 
-const client = new AetherFlowClient({
-  apiKey: 'af_key_88031cd2e9821',      // Your developer workspace API key
-  workspaceId: 'ws_9021aef3b129',      // Target workspace ID
-  timeout: 10000,                      // Timeout in milliseconds (default: 15s)
-  maxRetries: 3                        // Automatic request retries on 5xx status
+```typescript
+import { AetherFlow } from '@aetherflow/sdk';
+
+const af = new AetherFlow({
+  apiKey: process.env.AF_API_KEY!,        // af_live_... integration key
+  workspaceId: process.env.AF_WORKSPACE!, // your workspace ObjectId
+  baseUrl: 'https://aetherflow-api.vercel.app', // optional: default is cloud
 });
 ```
 
 ---
 
-### 3. Running Workflows
-Execute workflow pipelines synchronously by sending input schemas:
-```javascript
-async function executeWorkflow() {
-  try {
-    const run = await client.workflows.run('wf_60b8a1c900e2', {
-      inputs: {
-        lead_name: "Sarah Miller",
-        lead_email: "sarah@example.com"
-      }
-    });
+### Stream a Chat Completion
 
-    console.log(`Execution succeeded. Run ID: ${run.runId}`);
-    console.log('Outputs:', run.outputs);
-  } catch (error) {
-    if (error.name === 'AetherFlowError') {
-      console.error(`API Error [Status ${error.status}]: ${error.message}`);
-    } else {
-      console.error('Network error:', error);
-    }
+```typescript
+const { text } = await af.chat.stream(
+  {
+    messages: [{ role: 'user', content: 'Explain REST APIs in one paragraph.' }],
+    modelId: 'openrouter/openai/gpt-4o',
+  },
+  (chunk, accumulated) => {
+    process.stdout.write(chunk); // stream tokens as they arrive
   }
-}
+);
+
+console.log('\n\nFull response:', text);
 ```
 
 ---
 
-### 4. Interactive Chat Streaming (SSE)
-Establish a token streaming thread listener using asynchronous generators:
-```javascript
-async function streamAgentChat() {
-  try {
-    const stream = await client.chats.stream({
-      messages: [
-        { role: 'user', content: 'What shipping modes are available?' }
-      ],
-      agentInfo: {
-        name: 'Support Bot',
-        workspaceId: 'ws_9021aef3b129'
-      }
-    });
+### Continue a Conversation
 
-    console.log('Streaming response:');
-    for await (const chunk of stream) {
-      process.stdout.write(chunk.text);
-    }
-    console.log('\nStream completed.');
-  } catch (error) {
-    console.error('Failed to stream response:', error.message);
-  }
-}
+```typescript
+// Step 1 — Create a thread
+const thread = await af.conversations.create({ title: 'Support Chat' });
+
+// Step 2 — First turn
+await af.chat.stream(
+  { messages: [{ role: 'user', content: 'What is AetherFlow?' }], conversationId: thread._id },
+  (chunk) => process.stdout.write(chunk)
+);
+
+// Step 3 — Follow-up (history auto-hydrated from server)
+await af.chat.stream(
+  { messages: [{ role: 'user', content: 'How do I create my first agent?' }], conversationId: thread._id },
+  (chunk) => process.stdout.write(chunk)
+);
 ```
 
 ---
 
-### 5. API Client Typings Reference
-Below are the TypeScript interfaces exported by the SDK library:
+### Manage Conversations
 
-| Type / Interface | Field | Type | Description |
+```typescript
+// List all threads
+const { docs } = await af.conversations.list({ page: 1, limit: 20 });
+
+// Get a single thread with its messages
+const messages = await af.conversations.messages(thread._id);
+
+// Delete a thread
+await af.conversations.delete(thread._id);
+```
+
+---
+
+### Client Configuration Reference
+
+| Option | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
-| **AetherFlowConfig** | `apiKey` | `string` | Secret developer credential token. |
-| | `workspaceId` | `string` | Unique workspace identifier. |
-| | `timeout` | `number` | Maximum request duration before abortion. |
-| **WorkflowRunResponse** | `runId` | `string` | MongoDB execution tracker ID. |
-| | `status` | `'succeeded' \| 'failed'` | Final execution pipeline status. |
-| | `outputs` | `Record<string, any>` | Outputs returned from endpoint nodes. |
+| `apiKey` | `string` | **required** | Integration key starting with `af_live_` |
+| `workspaceId` | `string` | `''` | Default workspace ID for all resource calls |
+| `baseUrl` | `string` | AetherFlow cloud | Your backend API URL |
+| `timeout` | `number` | `60000` | Request timeout in milliseconds |
+
+---
+
+### Error Handling
+
+```typescript
+import { AetherFlow, AetherFlowError } from '@aetherflow/sdk';
+
+try {
+  await af.chat.stream({ messages: [...] });
+} catch (err) {
+  if (err instanceof AetherFlowError) {
+    console.error(`[${err.statusCode}] ${err.message}`);
+  }
+}
+```
+
+> [!NOTE]
+> The SDK is compatible with Node.js 18+, Deno, Bun, and modern browsers. It uses the native `fetch` API and `ReadableStream` — no polyfills required.

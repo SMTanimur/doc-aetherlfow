@@ -1,35 +1,63 @@
-# Retrieve Active Providers
+# Retrieve API Providers
 
-Fetches all configured API key providers (e.g., OpenAI, Google, Tavily) registered under the workspace.
+Fetch all API provider configurations registered in the workspace. Providers represent the LLM services and tool integrations available for node execution.
 
-### Endpoint Contract
+---
+
+### Endpoint
+
 ```http
-GET /providers
-Authorization: Bearer af_live_your_integration_key_here
+GET /workspaces/:wsId/providers
+Authorization: Bearer af_live_42910aef192b
 ```
 
 ---
 
-### Response Payload
+### Response Schema
+
 ```json
 {
-  "success": true,
   "providers": [
     {
+      "_id": "68490a3f2c1e4b90012345ab",
+      "name": "OpenAI Service",
       "identifier": "openai",
-      "name": "OpenAI Service Connection",
-      "status": "active",
-      "auth_mode": "aetherflow"
+      "keyMode": "aetherflow",
+      "isActive": true,
+      "createdAt": "2026-07-01T10:00:00Z"
     },
     {
-      "identifier": "tavily",
+      "_id": "68490a3f2c1e4b90012345cd",
       "name": "Tavily Search Engine",
-      "status": "active",
-      "auth_mode": "own_key"
+      "identifier": "tavily",
+      "keyMode": "own_key",
+      "isActive": true,
+      "createdAt": "2026-07-01T10:05:00Z"
     }
   ]
 }
 ```
 
+---
+
+### Provider Object Fields
+
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `_id` | `string` | MongoDB ObjectId of the provider record |
+| `name` | `string` | Display name shown in the canvas node picker |
+| `identifier` | `string` | System identifier used in model routing |
+| `keyMode` | `string` | `"aetherflow"` (platform key) or `"own_key"` (custom credential) |
+| `isActive` | `boolean` | Whether this provider is currently available for execution |
+
+---
+
+### Key Modes
+
+| Mode | Description |
+| :--- | :--- |
+| `aetherflow` | AetherFlow's shared platform API key is used — no setup required |
+| `own_key` | Workspace owner supplies their own provider API key via Connections |
+
 > [!WARNING]
-> **Key Status:** If a provider is marked as `inactive`, workspace nodes relying on that provider will fail connection validation checks at execution time.
+> Providers with `"isActive": false` will cause node executions that depend on them to fail. Activate providers by adding a valid connection credential in Workspace Settings.

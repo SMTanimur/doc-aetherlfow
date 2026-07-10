@@ -1,42 +1,73 @@
-# Retrieve Available Models
+# Retrieve LLM Models
 
-Use this endpoint to fetch all active language models and media generators available for workspace executions.
+Fetch all active language models and media generators available in the unified model registry. Use the returned `model_id` values to specify a model in chat streaming requests.
 
-### Endpoint Contract
+---
+
+### Endpoint
+
 ```http
 GET /ai-models/unified
-Authorization: Bearer af_live_your_integration_key_here
+Authorization: Bearer af_live_42910aef192b
 ```
 
 ---
 
-### Response Payload
+### Response Schema
+
 ```json
 {
-  "success": true,
   "models": [
     {
-      "id": "gemini-1.5-pro",
-      "name": "Gemini 1.5 Pro",
-      "provider": "google",
-      "type": "chat",
-      "max_tokens": 1048576,
-      "temperature_range": {
-        "min": 0.0,
-        "max": 2.0
-      }
+      "model": "openrouter/openai/gpt-4o",
+      "provider": "openai",
+      "model_name": "GPT-4o",
+      "context_window": 128000,
+      "type": "chat"
     },
     {
-      "id": "gpt-4o",
-      "name": "GPT-4o",
-      "provider": "openai",
-      "type": "chat",
-      "max_tokens": 4096,
-      "temperature_range": {
-        "min": 0.0,
-        "max": 2.0
-      }
+      "model": "openrouter/anthropic/claude-3-5-sonnet",
+      "provider": "anthropic",
+      "model_name": "Claude 3.5 Sonnet",
+      "context_window": 200000,
+      "type": "chat"
+    },
+    {
+      "model": "openrouter/google/gemini-flash-1.5",
+      "provider": "google",
+      "model_name": "Gemini 1.5 Flash",
+      "context_window": 1000000,
+      "type": "chat"
     }
   ]
 }
 ```
+
+---
+
+### Model Object Fields
+
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `model` | `string` | Fully qualified model ID to use in API requests |
+| `provider` | `string` | Provider name (`openai`, `anthropic`, `google`, etc.) |
+| `model_name` | `string` | Human-readable display name |
+| `context_window` | `number` | Maximum tokens the model can process in one request |
+| `type` | `string` | Model capability type (`chat`, `vision`, `embedding`) |
+
+---
+
+### Using a Model ID
+
+Pass the `model` value directly to the `model_id` field in chat streaming requests:
+
+```json
+{
+  "messages": [{"role": "user", "content": "Hello!"}],
+  "workspace_id": "6a3329fedc827a13d85059fd",
+  "model_id": "openrouter/openai/gpt-4o"
+}
+```
+
+> [!NOTE]
+> Model availability depends on which provider connections your workspace has configured. Models from providers without active connections will return `402 No Active Key` when invoked.

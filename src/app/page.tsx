@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { DocsSidebar } from '@/components/docs/docs-sidebar';
 import { MarkdownRenderer } from '@/components/docs/markdown-renderer';
 import { docsSections } from '@/lib/docs-data';
-import { Loader2, Play, CheckCircle, Terminal, Settings, Sparkles, MessageSquare, ExternalLink, Layers } from 'lucide-react';
+import { Loader2, Play, CheckCircle, Terminal, Settings, Sparkles, MessageSquare, Layers } from 'lucide-react';
+import { DocSkeleton, PlaygroundSkeleton } from '@/components/docs/doc-skeleton';
 
 interface CodeBlockType {
   lang: string;
@@ -415,12 +416,9 @@ export default function Home() {
                 </p>
               </div>
 
-              {/* Markdown Narrative Parser */}
+              {/* Markdown Narrative / Skeleton */}
               {loading ? (
-                <div className="py-20 flex flex-col items-center justify-center text-zinc-400 gap-2.5 select-none">
-                  <Loader2 size={24} className="animate-spin text-zinc-400" />
-                  <span className="text-xs font-semibold">Fetching documentation...</span>
-                </div>
+                <DocSkeleton />
               ) : (
                 <MarkdownRenderer content={cleanText} />
               )}
@@ -503,7 +501,9 @@ export default function Home() {
             )}
 
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {codeBlocks.length === 0 ? (
+              {loading ? (
+                <PlaygroundSkeleton />
+              ) : codeBlocks.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-zinc-500 text-[10px] text-center px-6 leading-relaxed">
                   <Terminal size={20} className="text-zinc-700 mb-2.5" />
                   <span>Select any developer route to view mock payloads and trigger sandbox test calls.</span>

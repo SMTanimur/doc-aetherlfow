@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Copy, Check, Info, AlertTriangle } from 'lucide-react';
+import { Copy, Check, Info, AlertTriangle, AlertCircle, Lightbulb } from 'lucide-react';
 
 interface MarkdownRendererProps {
   content: string;
@@ -23,19 +23,21 @@ function CodeBlock({ codeText, lang }: CodeBlockProps) {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const langLabel = lang === 'http' ? 'HTTP' : lang.toUpperCase();
+
   return (
-    <div className="relative rounded-xl border border-zinc-200 bg-zinc-950 text-zinc-50 overflow-hidden font-mono text-xs my-4 shadow-sm">
+    <div className="relative rounded-xl border border-zinc-200 bg-zinc-950 text-zinc-50 overflow-hidden font-mono text-xs my-5 shadow-sm group">
       <div className="px-4 py-2 bg-zinc-900 border-b border-zinc-800 flex items-center justify-between text-zinc-400 text-[10px] font-bold uppercase tracking-wider select-none">
-        <span>{lang}</span>
+        <span className="text-zinc-500">{langLabel}</span>
         <button
           onClick={handleCopy}
-          className="p-1 rounded bg-zinc-800 hover:bg-zinc-750 border border-zinc-800 text-zinc-400 hover:text-zinc-200 cursor-pointer flex items-center gap-1 transition-all"
+          className="flex items-center gap-1.5 px-2 py-1 rounded bg-zinc-800 hover:bg-zinc-700 border border-zinc-700/50 text-zinc-400 hover:text-zinc-100 cursor-pointer transition-all duration-150"
         >
-          {copied ? <Check size={11} className="text-emerald-400" /> : <Copy size={11} />}
-          {copied ? 'Copied' : 'Copy'}
+          {copied ? <Check size={10} className="text-emerald-400" /> : <Copy size={10} />}
+          <span>{copied ? 'Copied!' : 'Copy'}</span>
         </button>
       </div>
-      <pre className="p-4 overflow-x-auto text-[11px] leading-normal">{codeText}</pre>
+      <pre className="p-4 overflow-x-auto text-[11px] leading-relaxed text-zinc-200 scrollbar-thin">{codeText}</pre>
     </div>
   );
 }
@@ -50,107 +52,152 @@ function getRawText(node: React.ReactNode): string {
   return '';
 }
 
+type AlertVariant = 'note' | 'tip' | 'important' | 'warning' | 'caution';
+
+interface AlertConfig {
+  icon: React.ReactNode;
+  containerClass: string;
+  labelClass: string;
+  label: string;
+}
+
+const ALERT_CONFIGS: Record<AlertVariant, AlertConfig> = {
+  note: {
+    icon: <Info size={14} className="text-indigo-500 flex-shrink-0 mt-0.5" />,
+    containerClass: 'bg-indigo-50/60 border-indigo-200/80 text-indigo-900',
+    labelClass: 'text-indigo-600',
+    label: 'Note',
+  },
+  tip: {
+    icon: <Lightbulb size={14} className="text-emerald-500 flex-shrink-0 mt-0.5" />,
+    containerClass: 'bg-emerald-50/60 border-emerald-200/80 text-emerald-900',
+    labelClass: 'text-emerald-600',
+    label: 'Tip',
+  },
+  important: {
+    icon: <AlertCircle size={14} className="text-violet-500 flex-shrink-0 mt-0.5" />,
+    containerClass: 'bg-violet-50/60 border-violet-200/80 text-violet-900',
+    labelClass: 'text-violet-600',
+    label: 'Important',
+  },
+  warning: {
+    icon: <AlertTriangle size={14} className="text-amber-500 flex-shrink-0 mt-0.5" />,
+    containerClass: 'bg-amber-50/60 border-amber-200/80 text-amber-900',
+    labelClass: 'text-amber-600',
+    label: 'Warning',
+  },
+  caution: {
+    icon: <AlertTriangle size={14} className="text-rose-500 flex-shrink-0 mt-0.5" />,
+    containerClass: 'bg-rose-50/60 border-rose-200/80 text-rose-900',
+    labelClass: 'text-rose-600',
+    label: 'Caution',
+  },
+};
+
 export function MarkdownRenderer({ content }: MarkdownRendererProps) {
   return (
-    <div className="prose prose-zinc max-w-3xl text-xs text-zinc-700 leading-relaxed space-y-3">
+    <div className="max-w-2xl text-xs text-zinc-700 leading-relaxed">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
           h1: ({ children }) => (
-            <h2 className="text-xl font-black text-zinc-900 mt-10 mb-4 tracking-tight">
+            <h2 className="text-xl font-black text-zinc-900 mt-10 mb-4 tracking-tight leading-tight">
               {children}
             </h2>
           ),
           h2: ({ children }) => (
-            <h3 className="text-base font-black text-zinc-900 mt-8 mb-3 border-b border-zinc-150 pb-1.5 tracking-tight">
+            <h3 className="text-base font-black text-zinc-900 mt-8 mb-3 pb-2 border-b border-zinc-150 tracking-tight">
               {children}
             </h3>
           ),
           h3: ({ children }) => (
-            <h4 className="text-sm font-black text-zinc-900 mt-6 mb-2 tracking-tight">
+            <h4 className="text-sm font-bold text-zinc-800 mt-6 mb-2.5 tracking-tight">
               {children}
             </h4>
           ),
           p: ({ children }) => (
-            <p className="text-xs text-zinc-700 leading-normal mt-2.5">
+            <p className="text-xs text-zinc-600 leading-relaxed mt-3 mb-1">
               {children}
             </p>
           ),
           ul: ({ children }) => (
-            <ul className="list-disc pl-5 my-2 space-y-1.5">
+            <ul className="list-none pl-0 my-3 space-y-1.5">
               {children}
             </ul>
           ),
           ol: ({ children }) => (
-            <ol className="list-decimal pl-5 my-2 space-y-1.5">
+            <ol className="list-decimal pl-5 my-3 space-y-1.5">
               {children}
             </ol>
           ),
           li: ({ children }) => (
-            <li className="text-xs text-zinc-700">
-              {children}
+            <li className="text-xs text-zinc-600 flex items-start gap-2">
+              <span className="w-1 h-1 rounded-full bg-zinc-400 flex-shrink-0 mt-1.5" />
+              <span>{children}</span>
             </li>
+          ),
+          hr: () => (
+            <hr className="border-zinc-150 my-6" />
           ),
           blockquote: ({ children }) => {
             const childrenArray = React.Children.toArray(children);
-            let isWarning = false;
 
+            let variant: AlertVariant = 'note';
             const cleanChildren = childrenArray.filter((child) => {
               const text = getRawText(child).trim();
-              if (text === '[!NOTE]') {
-                return false;
-              }
-              if (text === '[!WARNING]') {
-                isWarning = true;
-                return false;
-              }
+              if (text === '[!NOTE]') { variant = 'note'; return false; }
+              if (text === '[!TIP]') { variant = 'tip'; return false; }
+              if (text === '[!IMPORTANT]') { variant = 'important'; return false; }
+              if (text === '[!WARNING]') { variant = 'warning'; return false; }
+              if (text === '[!CAUTION]') { variant = 'caution'; return false; }
               return true;
             });
 
+            const cfg = ALERT_CONFIGS[variant];
+
             return (
-              <div className={`p-4 rounded-xl border flex items-start gap-3 my-4 ${
-                isWarning ? 'bg-amber-50/50 border-amber-200 text-amber-900' : 'bg-indigo-50/50 border-indigo-200 text-indigo-900'
-              }`}>
-                {isWarning ? (
-                  <AlertTriangle size={15} className="text-amber-600 mt-0.5 flex-shrink-0" />
-                ) : (
-                  <Info size={15} className="text-indigo-600 mt-0.5 flex-shrink-0" />
-                )}
-                <div className="flex-1 text-xs leading-normal font-medium">
-                  {cleanChildren}
+              <div className={`flex items-start gap-3 p-4 rounded-xl border my-5 ${cfg.containerClass}`}>
+                {cfg.icon}
+                <div className="flex-1 min-w-0">
+                  <span className={`text-[10px] font-black uppercase tracking-widest block mb-1 ${cfg.labelClass}`}>
+                    {cfg.label}
+                  </span>
+                  <div className="text-xs leading-relaxed font-medium opacity-90">
+                    {cleanChildren}
+                  </div>
                 </div>
               </div>
             );
           },
           table: ({ children }) => (
-            <div className="overflow-x-auto my-6 border border-zinc-200 rounded-xl shadow-sm bg-white">
-              <table className="w-full text-left text-xs border-collapse divide-y divide-zinc-200">
+            <div className="overflow-x-auto my-6 border border-zinc-200 rounded-xl shadow-sm">
+              <table className="w-full text-left text-xs border-collapse">
                 {children}
               </table>
             </div>
           ),
           thead: ({ children }) => (
-            <thead className="bg-zinc-50/75 text-zinc-700 font-bold uppercase tracking-wider">
+            <thead className="bg-zinc-50 border-b border-zinc-200">
               {children}
             </thead>
           ),
           tbody: ({ children }) => (
-            <tbody className="divide-y divide-zinc-150 bg-white">
+            <tbody className="divide-y divide-zinc-100 bg-white">
               {children}
             </tbody>
           ),
           tr: ({ children }) => (
-            <tr className="hover:bg-zinc-50/50 transition-colors">
+            <tr className="hover:bg-zinc-50/60 transition-colors duration-100">
               {children}
             </tr>
           ),
           th: ({ children }) => (
-            <th className="px-4 py-3 text-[10px] font-bold text-zinc-550 uppercase tracking-wider">
+            <th className="px-4 py-2.5 text-[10px] font-bold text-zinc-500 uppercase tracking-wider whitespace-nowrap">
               {children}
             </th>
           ),
           td: ({ children }) => (
-            <td className="px-4 py-3 text-xs text-zinc-700 font-normal leading-normal">
+            <td className="px-4 py-2.5 text-xs text-zinc-700 leading-relaxed align-top">
               {children}
             </td>
           ),
@@ -160,7 +207,10 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
 
             if (isInline) {
               return (
-                <code className="bg-zinc-100 text-indigo-600 font-mono text-[11px] px-1.5 py-0.5 rounded border border-zinc-250/30" {...props}>
+                <code
+                  className="bg-zinc-100 text-indigo-700 font-mono text-[10.5px] px-1.5 py-0.5 rounded border border-zinc-200 whitespace-nowrap"
+                  {...props}
+                >
                   {children}
                 </code>
               );
@@ -169,10 +219,23 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
             return (
               <CodeBlock
                 codeText={String(children).replace(/\n$/, '')}
-                lang={match ? match[1] : 'json'}
+                lang={match ? match[1] : 'text'}
               />
             );
           },
+          strong: ({ children }) => (
+            <strong className="font-bold text-zinc-900">{children}</strong>
+          ),
+          a: ({ href, children }) => (
+            <a
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-indigo-600 hover:text-indigo-800 underline underline-offset-2 transition-colors"
+            >
+              {children}
+            </a>
+          ),
         }}
       >
         {content}

@@ -1,32 +1,64 @@
 # List Thread Messages
 
-Fetches paginated list of chat history messages recorded inside a conversation thread.
+Fetch the paginated message history for a specific conversation thread. Returns messages in chronological order (oldest first).
 
-### Endpoint Contract
+---
+
+### Endpoint
+
 ```http
-GET /workspaces/ws_9021aef/conversations/thread_881a029c/messages?page=1&limit=20
-Authorization: Bearer af_live_your_integration_key_here
+GET /workspaces/:wsId/conversations/:conversationId/messages?page=1&limit=20
+Authorization: Bearer af_live_42910aef192b
 ```
 
 ---
 
-### Response Payload
+### Query Parameters
+
+| Parameter | Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `page` | `number` | `1` | Page number for pagination |
+| `limit` | `number` | `20` | Messages per page (max: 100) |
+
+---
+
+### Response Schema
+
 ```json
 {
-  "success": true,
-  "messages": [
+  "docs": [
     {
-      "id": "msg_001aef",
+      "_id": "msg_68490a3f001",
+      "conversationId": "6a3329fedc827a13d85059fd",
       "role": "user",
-      "content": "How do I upgrade my shipping?",
-      "createdAt": "2026-06-29T09:30:00Z"
+      "content": "What are the top features of AetherFlow?",
+      "createdAt": "2026-07-09T09:30:00Z"
     },
     {
-      "id": "msg_002aef",
+      "_id": "msg_68490a3f002",
+      "conversationId": "6a3329fedc827a13d85059fd",
       "role": "assistant",
-      "content": "You can upgrade to express shipping inside your profile page under orders.",
-      "createdAt": "2026-06-29T09:30:02Z"
+      "content": "AetherFlow offers three standout features: visual agent building...",
+      "createdAt": "2026-07-09T09:30:03Z"
     }
-  ]
+  ],
+  "totalDocs": 48,
+  "totalPages": 3,
+  "page": 1,
+  "limit": 20,
+  "hasNextPage": true,
+  "hasPrevPage": false
 }
 ```
+
+---
+
+### Message Object Fields
+
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `_id` | `string` | Unique message ObjectId |
+| `conversationId` | `string` | Parent conversation ObjectId |
+| `role` | `string` | `"user"`, `"assistant"`, or `"system"` |
+| `content` | `string` | Full text content of the message |
+| `createdAt` | `string` | ISO 8601 creation timestamp |

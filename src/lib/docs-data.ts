@@ -158,5 +158,12 @@ export const docsSections: DocSection[] = [
     title: 'MCP Server Setup',
     subtitle: 'Register private Model Context Protocol endpoints.',
     filePath: '/docs/mcp-servers.md'
+  },
+  {
+    id: 'quota-analytics',
+    category: 'API REFERENCE',
+    title: 'Quota Analytics',
+    subtitle: 'Monitor token usage, credits, and billing cycle consumption.',
+    filePath: '/docs/quota-analytics.md'
   }
 ];

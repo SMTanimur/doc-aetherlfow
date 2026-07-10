@@ -1,54 +1,82 @@
-# Quota Status & Key Mode
+# Quota Analytics
 
-Manage billing credit limits, rolling usage stats, and key authorization configurations.
+Monitor your workspace's token consumption, credit balance, and quota limits in real time. Use these endpoints to build usage dashboards or trigger alerts when quotas approach their limits.
 
-### 1. Retrieve Quota Status
+---
+
+### Get Quota Status
+
 ```http
-GET /quota/ws_9021aef3b129
+GET /workspaces/:wsId/quota
+Authorization: Bearer af_live_42910aef192b
 ```
 
 ---
 
-### Quota Response
+### Response Schema
+
 ```json
 {
-  "workspaceId": "ws_9021aef3b129",
-  "limits": {
-    "max_monthly_runs": 10000,
-    "runs_used_this_month": 3480
+  "workspaceId": "6a3329fedc827a13d85059fd",
+  "plan": "pro",
+  "quota": {
+    "token_limit": 2000000,
+    "tokens_used": 834521,
+    "tokens_remaining": 1165479,
+    "usage_percent": 41.7
   },
-  "credits": {
-    "balance_usd": 42.50,
-    "pack_tier": "pro_tier"
-  }
+  "billing_cycle": {
+    "start": "2026-07-01T00:00:00Z",
+    "end": "2026-07-31T23:59:59Z",
+    "days_remaining": 22
+  },
+  "key_mode": "aetherflow"
 }
 ```
 
 ---
 
-### 2. Update Key Mode
-Configure whether the workspace utilizes platform credentials or custom private API keys.
+### Response Fields
+
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `plan` | `string` | Current subscription tier (`free`, `pro`, `business`) |
+| `quota.token_limit` | `number` | Total tokens available this billing cycle |
+| `quota.tokens_used` | `number` | Tokens consumed since billing cycle start |
+| `quota.usage_percent` | `number` | Percentage of quota consumed |
+| `key_mode` | `string` | `"aetherflow"` (platform key) or `"own_key"` |
+
+---
+
+### Update Key Mode
+
+Switch between using AetherFlow's shared platform API key or your own provider credentials:
+
 ```http
-PATCH /quota/ws_9021aef3b129/key-mode
-Authorization: Bearer af_live_your_integration_key_here
+PATCH /workspaces/:wsId/quota/key-mode
+Authorization: Bearer af_live_42910aef192b
 Content-Type: application/json
-```
 
----
-
-### Key Mode Request
-```json
 {
   "key_mode": "own_key"
 }
 ```
 
+| Mode | Description |
+| :--- | :--- |
+| `aetherflow` | Use AetherFlow's platform key — counts against your subscription quota |
+| `own_key` | Use your own provider API key — does not consume AetherFlow credits |
+
 ---
 
-### Key Mode Response
-```json
-{
-  "success": true,
-  "key_mode": "own_key"
-}
+### Usage History
+
+```http
+GET /workspaces/:wsId/quota/analytics?period=30d
+Authorization: Bearer af_live_42910aef192b
 ```
+
+Returns daily token consumption breakdown for the specified period (`7d`, `30d`, `90d`).
+
+> [!NOTE]
+> Switching to `own_key` mode requires adding valid provider credentials under **Workspace Settings → Connections** first. Executions will fail until credentials are configured.
