@@ -64,7 +64,6 @@ Pass the `model` value directly to the `model_id` field in chat streaming reques
 ```json
 {
   "messages": [{"role": "user", "content": "Hello!"}],
-  "workspace_id": "6a3329fedc827a13d85059fd",
   "model_id": "openrouter/openai/gpt-4o"
 }
 ```

@@ -15,7 +15,7 @@ Content-Type: application/json
   "messages": [
     { "role": "user", "content": "What are the top 3 features of AetherFlow?" }
   ],
-  "workspace_id": "6a3329fedc827a13d85059fd",
+  "agent_id": "6b4290fa8e310dc411a095e2",
   "model_id": "openrouter/openai/gpt-4o"
 }
 ```
@@ -27,7 +27,8 @@ Content-Type: application/json
 | Field | Type | Required | Description |
 | :--- | :--- | :--- | :--- |
 | `messages` | `Message[]` | ✅ | Array of chat messages in conversation order |
-| `workspace_id` | `string` | ✅ | MongoDB ObjectId of the target workspace |
+| `agent_id` | `string` | ❌ | Agent / Workflow ID to execute |
+| `workspace_id` | `string` | ❌ | Optional. Auto-detected from Integration Key if omitted |
 | `model_id` | `string` | ❌ | Model identifier (uses workspace default if omitted) |
 | `conversation_id` | `string` | ❌ | Existing conversation ID to hydrate prior history |
 | `workflow_id` | `string` | ❌ | Agent/workflow ID to use as system prompt context |
@@ -76,7 +77,7 @@ curl -X POST https://aetherflow-api.vercel.app/chat/stream \
   -H "Content-Type: application/json" \
   -d '{
     "messages": [{"role":"user","content":"Explain quantum computing briefly"}],
-    "workspace_id": "6a3329fedc827a13d85059fd"
+    "agent_id": "6b4290fa8e310dc411a095e2"
   }' \
   --no-buffer
 ```

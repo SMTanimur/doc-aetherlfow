@@ -479,11 +479,14 @@ export default function Home() {
                     />
                   </div>
                   <div>
-                    <label className="block text-[8px] text-zinc-500 font-black uppercase mb-1">Workspace ID</label>
+                    <label className="block text-[8px] text-zinc-500 font-black uppercase mb-1">
+                      Workspace ID <span className="text-zinc-600 font-normal text-[7.5px]">(Optional — Auto-detected)</span>
+                    </label>
                     <input
                       type="text"
                       value={workspaceId}
                       onChange={(e) => setWorkspaceId(e.target.value)}
+                      placeholder="Optional (Auto-detected from Key)"
                       className="w-full px-2.5 py-1.5 bg-zinc-950 border border-zinc-850 rounded text-[10px] font-mono text-zinc-200 focus:outline-none focus:border-zinc-700"
                     />
                   </div>

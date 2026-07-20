@@ -58,7 +58,7 @@ curl -X POST https://aetherflow-api.vercel.app/chat/stream \
         "content": "Hi Team, we have a cargo shipment coming in from Cargonexx on Friday 2026-07-12. Volume is 45 tons. Thanks!"
       }
     ],
-    "workspace_id": "6a3329fedc827a13d85059fd"
+    "agent_id": "6b4290fa8e310dc411a095e2"
   }' \
   --no-buffer
 ```

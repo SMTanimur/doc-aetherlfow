@@ -19,7 +19,7 @@ from aetherflow import AetherFlow
 
 af = AetherFlow(
     api_key="af_live_42910aef192b",          # integration key
-    workspace_id="6a3329fedc827a13d85059fd", # workspace ObjectId
+    workspace_id=None,                       # optional: auto-detected from api_key
     base_url="https://aetherflow-api.vercel.app",  # optional
     timeout=60.0,                            # seconds
 )
@@ -95,7 +95,7 @@ except af.AetherFlowError as e:
 | Parameter | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
 | `api_key` | `str` | **required** | Integration key (`af_live_...`) |
-| `workspace_id` | `str` | `""` | Default workspace for all resource calls |
+| `workspace_id` | `str` | `""` | Optional. Auto-detected from `api_key` |
 | `base_url` | `str` | AetherFlow cloud | Backend API URL |
 | `timeout` | `float` | `60.0` | Request timeout in seconds |
 

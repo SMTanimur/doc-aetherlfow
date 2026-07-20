@@ -25,9 +25,9 @@ bun add @aetherflow/sdk
 import { AetherFlow } from '@aetherflow/sdk';
 
 const af = new AetherFlow({
-  apiKey: process.env.AF_API_KEY!,        // af_live_... integration key
-  workspaceId: process.env.AF_WORKSPACE!, // your workspace ObjectId
-  baseUrl: 'https://aetherflow-api.vercel.app', // optional: default is cloud
+  apiKey: process.env.AF_API_KEY!,               // af_live_... integration key
+  workspaceId: process.env.AF_WORKSPACE,         // optional: auto-detected from apiKey
+  baseUrl: 'https://aetherflow-api.vercel.app',  // optional: default is cloud
 });
 ```
 
@@ -92,7 +92,7 @@ await af.conversations.delete(thread._id);
 | Option | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
 | `apiKey` | `string` | **required** | Integration key starting with `af_live_` |
-| `workspaceId` | `string` | `''` | Default workspace ID for all resource calls |
+| `workspaceId` | `string` | `''` | Optional. Auto-detected from `apiKey` |
 | `baseUrl` | `string` | AetherFlow cloud | Your backend API URL |
 | `timeout` | `number` | `60000` | Request timeout in milliseconds |
 
