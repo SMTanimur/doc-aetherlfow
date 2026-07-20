@@ -28,8 +28,8 @@ Content-Type: application/json
 | :--- | :--- | :--- | :--- |
 | `messages` | `Message[]` | ✅ | Array of chat messages in conversation order |
 | `agent_id` | `string` | ❌ | Agent / Workflow ID to execute |
+| `model_id` | `string` | ❌ | Optional. Model ID to override default (e.g. `google/gemini-2.5-flash`, `openrouter/openai/gpt-4o`) |
 | `workspace_id` | `string` | ❌ | Optional. Auto-detected from Integration Key if omitted |
-| `model_id` | `string` | ❌ | Model identifier (uses workspace default if omitted) |
 | `conversation_id` | `string` | ❌ | Existing conversation ID to hydrate prior history |
 | `workflow_id` | `string` | ❌ | Agent/workflow ID to use as system prompt context |
 

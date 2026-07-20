@@ -23,6 +23,7 @@ interface Message {
 export default function PlaygroundPage() {
   const [workspaceId, setWorkspaceId] = useState('');
   const [agentId, setAgentId] = useState('');
+  const [modelId, setModelId] = useState('');
   const [conversationId, setConversationId] = useState('');
   const [token, setToken] = useState('');
   const [baseUrl, setBaseUrl] = useState('https://aetherflow-api.vercel.app');
@@ -118,6 +119,7 @@ export default function PlaygroundPage() {
         body: JSON.stringify({
           messages: updatedMessages.map(m => ({ role: m.role, content: m.content })),
           agent_id: agentId || undefined,
+          model_id: modelId || undefined,
           workspace_id: workspaceId || undefined,
           conversation_id: conversationId || undefined
         })
@@ -228,6 +230,19 @@ export default function PlaygroundPage() {
                 value={agentId}
                 onChange={(e) => setAgentId(e.target.value)}
                 placeholder="Enter Agent ObjectId"
+                className="w-full px-2.5 py-1.5 bg-zinc-950 border border-zinc-850 rounded-lg text-[10px] font-mono text-zinc-200 focus:outline-none focus:border-zinc-700 focus:ring-1 focus:ring-zinc-800"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[8px] text-zinc-500 font-black uppercase mb-1">
+                AI Model ID <span className="text-zinc-600 font-normal text-[7.5px]">(Optional — Overrides default)</span>
+              </label>
+              <input
+                type="text"
+                value={modelId}
+                onChange={(e) => setModelId(e.target.value)}
+                placeholder="e.g. google/gemini-2.5-flash, openrouter/openai/gpt-4o"
                 className="w-full px-2.5 py-1.5 bg-zinc-950 border border-zinc-850 rounded-lg text-[10px] font-mono text-zinc-200 focus:outline-none focus:border-zinc-700 focus:ring-1 focus:ring-zinc-800"
               />
             </div>
