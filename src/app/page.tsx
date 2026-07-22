@@ -376,14 +376,22 @@ export default function Home() {
             <span className="text-zinc-300">/</span>
             <span className="text-zinc-800 uppercase tracking-widest">{activeSection.title}</span>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
+            <Link
+              href="/playground"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-indigo-200 bg-indigo-50/70 hover:bg-indigo-100/70 text-[10px] font-bold text-indigo-700 hover:text-indigo-900 shadow-sm transition-all"
+            >
+              <Terminal size={11} className="text-indigo-600" />
+              <span>Playground Page</span>
+              <Sparkles size={10} className="text-indigo-500 animate-pulse" />
+            </Link>
             <a
               href="https://aetherflow-omega.vercel.app/"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 text-[10px] font-bold text-zinc-700 hover:text-zinc-900 shadow-sm transition-all"
             >
-              <Layers size={11} className="text-indigo-600" />
+              <Layers size={11} className="text-zinc-500" />
               <span>Console Studio</span>
             </a>
             <a
@@ -392,6 +400,7 @@ export default function Home() {
               rel="noopener noreferrer"
               className="text-[10px] font-bold text-zinc-600 hover:text-zinc-900 border border-zinc-200 px-3 py-1.5 rounded-lg bg-zinc-50/50 hover:bg-white shadow-sm transition-all"
             >
+              Developer Profile
             </a>
           </div>
         </div>
