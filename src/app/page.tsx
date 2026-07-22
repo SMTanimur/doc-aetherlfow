@@ -137,7 +137,15 @@ export default function Home() {
           }
 
           // Strip code blocks to get narrative content for the center pane
-          const narrative = text.replace(/```\w*\n[\s\S]*?```/g, '').trim();
+          let narrative = text.replace(/```\w*\n[\s\S]*?```/g, '').trim();
+
+          // Strip duplicate top-level title header (# Title) to avoid rendering title twice
+          if (narrative.startsWith('# ')) {
+            const firstLineEnd = narrative.indexOf('\n');
+            if (firstLineEnd !== -1) {
+              narrative = narrative.slice(firstLineEnd).trim();
+            }
+          }
 
           setCleanText(narrative);
           setCodeBlocks(blocks);
@@ -368,35 +376,22 @@ export default function Home() {
             <span className="text-zinc-300">/</span>
             <span className="text-zinc-800 uppercase tracking-widest">{activeSection.title}</span>
           </div>
-          <div className="flex items-center gap-4">
-            {/* Quick Links Navigation */}
-            <div className="flex items-center gap-2 border-r border-zinc-200 pr-4">
-              <Link
-                href="/playground"
-                className="group flex items-center gap-2 px-3 py-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 hover:border-zinc-300 text-[10px] font-bold text-zinc-700 hover:text-zinc-900 shadow-sm transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0"
-              >
-                <Layers size={12} className="text-zinc-500 group-hover:text-indigo-600 transition-colors" />
-                <span>Playground Page</span>
-                <Sparkles size={10} className="text-indigo-500 group-hover:text-indigo-600 transition-colors animate-pulse" />
-              </Link>
-
-              <Link
-                href="/playground"
-                className="group flex items-center gap-2 px-3 py-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 hover:border-zinc-300 text-[10px] font-bold text-zinc-700 hover:text-zinc-900 shadow-sm transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0"
-              >
-                <MessageSquare size={12} className="text-zinc-500 group-hover:text-indigo-600 transition-colors" />
-                <span>Conversations</span>
-                <Sparkles size={10} className="text-indigo-500 group-hover:text-indigo-600 transition-colors animate-pulse" />
-              </Link>
-            </div>
-
+          <div className="flex items-center gap-3">
+            <a
+              href="https://aetherflow-omega.vercel.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 text-[10px] font-bold text-zinc-700 hover:text-zinc-900 shadow-sm transition-all"
+            >
+              <Layers size={11} className="text-indigo-600" />
+              <span>Console Studio</span>
+            </a>
             <a
               href="https://smtanimur.com/"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[10px] font-black text-zinc-650 hover:text-zinc-900 border border-zinc-200 hover:border-zinc-300 px-3 py-1.5 rounded-lg bg-zinc-50/50 hover:bg-white shadow-sm transition-all duration-200"
+              className="text-[10px] font-bold text-zinc-600 hover:text-zinc-900 border border-zinc-200 px-3 py-1.5 rounded-lg bg-zinc-50/50 hover:bg-white shadow-sm transition-all"
             >
-              Developer Profile
             </a>
           </div>
         </div>
@@ -467,7 +462,7 @@ export default function Home() {
             {/* Collapsible Environment Credentials Settings */}
             {showSettings && (
               <div className="p-4 border-b border-zinc-900 bg-zinc-900/20 space-y-3">
-                <div className="text-[9px] font-black text-zinc-550 uppercase tracking-widest">Environment Setup</div>
+                <div className="text-[9px] font-black text-zinc-550 uppercase tracking-widest">Company Environment Setup</div>
                 <div className="space-y-2.5">
                   <div>
                     <label className="block text-[8px] text-zinc-500 font-black uppercase mb-1">API Base URL</label>
@@ -480,23 +475,25 @@ export default function Home() {
                   </div>
                   <div>
                     <label className="block text-[8px] text-zinc-500 font-black uppercase mb-1">
-                      Workspace ID <span className="text-zinc-600 font-normal text-[7.5px]">(Optional — Auto-detected)</span>
+                      Integration Key <span className="text-zinc-600 font-normal text-[7.5px]">(Bearer af_live_...)</span>
                     </label>
-                    <input
-                      type="text"
-                      value={workspaceId}
-                      onChange={(e) => setWorkspaceId(e.target.value)}
-                      placeholder="Optional (Auto-detected from Key)"
-                      className="w-full px-2.5 py-1.5 bg-zinc-950 border border-zinc-850 rounded text-[10px] font-mono text-zinc-200 focus:outline-none focus:border-zinc-700"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[8px] text-zinc-500 font-black uppercase mb-1">Workspace Integration Key (af_live_...)</label>
                     <textarea
                       value={token}
                       onChange={(e) => setToken(e.target.value)}
                       rows={2}
                       className="w-full px-2.5 py-1.5 bg-zinc-950 border border-zinc-850 rounded text-[9.5px] font-mono text-zinc-200 focus:outline-none focus:border-zinc-700 resize-none leading-normal"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[8px] text-zinc-500 font-black uppercase mb-1">
+                      Agent ID <span className="text-zinc-600 font-normal text-[7.5px]">(Target agent to execute)</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={workspaceId}
+                      onChange={(e) => setWorkspaceId(e.target.value)}
+                      placeholder="6b4290fa8e310dc411a095e2"
+                      className="w-full px-2.5 py-1.5 bg-zinc-950 border border-zinc-850 rounded text-[10px] font-mono text-zinc-200 focus:outline-none focus:border-zinc-700"
                     />
                   </div>
                 </div>
@@ -514,19 +511,34 @@ export default function Home() {
               ) : (
                 <div className="space-y-4">
                   {codeBlocks.map((block, idx) => {
-                    const isResponse = idx > 0 || block.code.startsWith('{') && !block.code.includes('POST');
+                    let cardLabel = 'SAMPLE PAYLOAD / SCHEMA';
+                    const langLower = (block.lang || '').toLowerCase();
+                    if (langLower === 'http') {
+                      cardLabel = 'REQUEST SPECIFICATION';
+                    } else if (langLower === 'bash' || langLower === 'sh') {
+                      cardLabel = 'cURL INTEGRATION EXAMPLE';
+                    } else if (langLower === 'typescript' || langLower === 'javascript' || langLower === 'js' || langLower === 'ts') {
+                      cardLabel = 'JAVASCRIPT / NODE.JS SDK EXAMPLE';
+                    } else if (langLower === 'python' || langLower === 'py') {
+                      cardLabel = 'PYTHON SDK EXAMPLE';
+                    } else if (langLower === 'json' && idx === 1) {
+                      cardLabel = 'EXPECTED RESPONSE SCHEMA';
+                    } else if (idx === 0) {
+                      cardLabel = 'REQUEST SPECIFICATION';
+                    }
+
+                    const isEditable = idx === 0 && (langLower === 'http' || langLower === 'json');
+
                     return (
                       <div
                         key={idx}
-                        className={`space-y-1.5 rounded-lg overflow-hidden border transition-all duration-350 ${
-                          isResponse && simulated ? 'border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.05)]' : 'border-zinc-800'
-                        }`}
+                        className="space-y-1.5 rounded-lg overflow-hidden border border-zinc-800 bg-zinc-950 transition-all duration-350"
                       >
-                        <div className="px-3 py-1 bg-zinc-900 border-b border-zinc-850 flex items-center justify-between text-zinc-400 text-[9px] font-bold uppercase tracking-wider">
-                          <span>{isResponse ? 'RESPONSE BODY' : 'REQUEST SPECIFICATION'}</span>
-                          <span>{block.lang}</span>
+                        <div className="px-3 py-1.5 bg-zinc-900/80 border-b border-zinc-850 flex items-center justify-between text-zinc-400 text-[9px] font-bold uppercase tracking-wider">
+                          <span className="text-zinc-300">{cardLabel}</span>
+                          <span className="text-indigo-400 font-mono text-[9px]">{block.lang || 'text'}</span>
                         </div>
-                        {idx === 0 ? (
+                        {isEditable ? (
                           <textarea
                             value={editableBlocks[idx] !== undefined ? editableBlocks[idx] : block.code}
                             onChange={(e) => {
@@ -535,11 +547,11 @@ export default function Home() {
                               setEditableBlocks(newBlocks);
                             }}
                             rows={Math.max(4, (editableBlocks[idx] || block.code).split('\n').length)}
-                            className="w-full p-3.5 bg-zinc-900/10 text-zinc-200 font-mono text-[10.5px] leading-relaxed focus:outline-none resize-y border-0 min-h-[90px] select-text"
+                            className="w-full p-3.5 bg-zinc-950 text-zinc-200 font-mono text-[10.5px] leading-relaxed focus:outline-none resize-y border-0 min-h-[90px] select-text"
                           />
                         ) : (
-                          <pre className="p-3.5 overflow-x-auto bg-zinc-900/40 select-text">
-                            {highlightCode(isResponse && simulated && liveResponse ? liveResponse : block.code)}
+                          <pre className="p-3.5 overflow-x-auto bg-zinc-950 select-text">
+                            {highlightCode(block.code)}
                           </pre>
                         )}
                       </div>
@@ -550,27 +562,41 @@ export default function Home() {
                   {simulating && (
                     <div className="p-3 rounded-lg bg-zinc-900 border border-zinc-800 text-[10px] text-zinc-400 font-semibold flex items-center gap-2 animate-pulse">
                       <Loader2 size={12} className="animate-spin text-indigo-400" />
-                      <span>Sending network payload and waiting for server response...</span>
+                      <span>Streaming response tokens from server...</span>
                     </div>
                   )}
 
                   {simulated && (
-                    <div className={`p-3 rounded-lg border text-[10px] font-semibold flex items-start gap-2 ${
-                      responseStatus.includes('200') || responseStatus.includes('201')
-                        ? 'bg-emerald-950/20 border-emerald-800/40 text-emerald-400'
-                        : 'bg-rose-950/20 border-rose-800/40 text-rose-400'
-                    }`}>
-                      <CheckCircle size={14} className={`flex-shrink-0 mt-0.5 ${
-                        responseStatus.includes('200') || responseStatus.includes('201') ? 'text-emerald-500' : 'text-rose-500'
-                      }`} />
-                      <div>
-                        <div className="font-bold">{responseStatus} ({latency}ms)</div>
-                        <div className="text-[9px] font-normal mt-0.5 opacity-80">
-                          {responseStatus.includes('200') || responseStatus.includes('201')
-                            ? 'Request processed successfully. Data retrieved from API server.'
-                            : 'Request execution completed with status notifications.'}
+                    <div className="space-y-2 pt-2 border-t border-zinc-900">
+                      <div className={`p-3 rounded-lg border text-[10px] font-semibold flex items-start gap-2 ${
+                        responseStatus.includes('200') || responseStatus.includes('201')
+                          ? 'bg-emerald-950/30 border-emerald-800/50 text-emerald-400'
+                          : 'bg-rose-950/30 border-rose-800/50 text-rose-400'
+                      }`}>
+                        <CheckCircle size={14} className={`flex-shrink-0 mt-0.5 ${
+                          responseStatus.includes('200') || responseStatus.includes('201') ? 'text-emerald-500' : 'text-rose-500'
+                        }`} />
+                        <div>
+                          <div className="font-bold">{responseStatus} ({latency}ms)</div>
+                          <div className="text-[9px] font-normal mt-0.5 opacity-80">
+                            {responseStatus.includes('200') || responseStatus.includes('201')
+                              ? 'Live test request processed successfully.'
+                              : 'Request execution completed with status notification.'}
+                          </div>
                         </div>
                       </div>
+
+                      {liveResponse && (
+                        <div className="space-y-1 rounded-lg overflow-hidden border border-emerald-500/40 bg-zinc-950 shadow-[0_0_15px_rgba(16,185,129,0.08)]">
+                          <div className="px-3 py-1.5 bg-emerald-950/40 border-b border-emerald-900/50 flex items-center justify-between text-emerald-400 text-[9px] font-bold uppercase tracking-wider">
+                            <span>LIVE SERVER RESPONSE OUTPUT</span>
+                            <span>SSE STREAM</span>
+                          </div>
+                          <pre className="p-3.5 overflow-x-auto bg-zinc-950 text-emerald-300 font-mono text-[10.5px] leading-relaxed select-text whitespace-pre-wrap">
+                            {liveResponse}
+                          </pre>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
